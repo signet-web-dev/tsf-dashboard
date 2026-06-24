@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# source spreadsheets contain customer PII - never commit
+/data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
