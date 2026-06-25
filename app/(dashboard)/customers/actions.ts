@@ -29,3 +29,20 @@ export async function createCustomer(input: {
   revalidatePath("/prospects");
   return id;
 }
+
+export async function deleteCustomer(customerId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("customers").delete().eq("id", customerId);
+  if (error) {
+    // orders.customer_id references customers(id) with no ON DELETE clause (defaults to
+    // RESTRICT), so Postgres blocks this with a foreign_key_violation if orders still exist.
+    if (error.code === "23503") {
+      throw new Error("Can't delete: this customer still has orders. Delete their orders first.");
+    }
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/customers");
+  revalidatePath("/prospects");
+}

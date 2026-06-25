@@ -12,10 +12,13 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CustomerStatusBadge } from "@/components/customers/CustomerStatusBadge";
+import { DeleteRowButton } from "@/components/shared/DeleteRowButton";
 import { formatINR } from "@/lib/utils/format";
+import { deleteCustomer } from "@/app/(dashboard)/customers/actions";
 import type { Customer } from "@/lib/supabase/types";
 
-export function CustomerTable({ customers }: { customers: Customer[] }) {
+export function CustomerTable({ customers: initialCustomers }: { customers: Customer[] }) {
+  const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("All");
 
@@ -62,6 +65,7 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
               <TableHead>Last Order</TableHead>
               <TableHead className="text-right">Cycle</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-9" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,11 +85,18 @@ export function CustomerTable({ customers }: { customers: Customer[] }) {
                 <TableCell>
                   <CustomerStatusBadge status={c.status} />
                 </TableCell>
+                <TableCell>
+                  <DeleteRowButton
+                    itemLabel={`customer ${c.name}`}
+                    onConfirm={() => deleteCustomer(c.id)}
+                    onDeleted={() => setCustomers((prev) => prev.filter((existing) => existing.id !== c.id))}
+                  />
+                </TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                   No customers match.
                 </TableCell>
               </TableRow>

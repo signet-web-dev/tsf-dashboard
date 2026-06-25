@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -15,8 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DeleteRowButton } from "@/components/shared/DeleteRowButton";
 import { formatINR } from "@/lib/utils/format";
-import { updateOrder } from "@/app/(dashboard)/orders/actions";
+import { updateOrder, deleteOrder } from "@/app/(dashboard)/orders/actions";
 import type { Order } from "@/lib/supabase/types";
 
 const CHANNEL_COLOR: Record<string, string> = {
@@ -118,6 +120,7 @@ export function OrdersTable({
               <TableHead className="text-right">Value</TableHead>
               <TableHead className="text-right">Outstanding</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-9" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,11 +131,12 @@ export function OrdersTable({
                 hideCustomerColumn={hideCustomerColumn}
                 expanded={expandedId === o.id}
                 onToggle={() => setExpandedId((prev) => (prev === o.id ? null : o.id))}
+                onDeleted={() => setOrders((prev) => prev.filter((existing) => existing.id !== o.id))}
               />
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={hideCustomerColumn ? 6 : 7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={hideCustomerColumn ? 7 : 8} className="py-8 text-center text-muted-foreground">
                   No orders match.
                 </TableCell>
               </TableRow>
@@ -150,17 +154,33 @@ function OrderRow({
   hideCustomerColumn,
   expanded,
   onToggle,
+  onDeleted,
 }: {
   order: Order;
   hideCustomerColumn: boolean;
   expanded: boolean;
   onToggle: () => void;
+  onDeleted: () => void;
 }) {
   return (
     <>
       <TableRow className="cursor-pointer" onClick={onToggle}>
         <TableCell className="text-muted-foreground">{order.id}</TableCell>
-        {!hideCustomerColumn && <TableCell>{order.customer_name ?? "—"}</TableCell>}
+        {!hideCustomerColumn && (
+          <TableCell>
+            {order.customer_id ? (
+              <Link
+                href={`/customers/${order.customer_id}`}
+                className="hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {order.customer_name ?? "—"}
+              </Link>
+            ) : (
+              order.customer_name ?? "—"
+            )}
+          </TableCell>
+        )}
         <TableCell>{order.order_date ?? "—"}</TableCell>
         <TableCell>
           {order.channel && (
@@ -182,10 +202,13 @@ function OrderRow({
             {order.delivery_status}
           </Badge>
         </TableCell>
+        <TableCell>
+          <DeleteRowButton itemLabel={`order ${order.id}`} onConfirm={() => deleteOrder(order.id)} onDeleted={onDeleted} />
+        </TableCell>
       </TableRow>
       {expanded && (
         <TableRow>
-          <TableCell colSpan={hideCustomerColumn ? 6 : 7} className="bg-muted/30 p-0">
+          <TableCell colSpan={hideCustomerColumn ? 7 : 8} className="bg-muted/30 p-0">
             <OrderDetails order={order} />
           </TableCell>
         </TableRow>

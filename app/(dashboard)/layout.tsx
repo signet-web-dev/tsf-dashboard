@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({
@@ -17,6 +18,7 @@ export default async function DashboardLayout({
         <Topbar userEmail={user?.email ?? null} />
         <main className="flex-1 overflow-y-auto bg-gray-50 p-6">{children}</main>
       </div>
+      <ChatWidget />
     </div>
   );
 }
